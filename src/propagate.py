@@ -1,58 +1,90 @@
-from datetime import datetime, timezone
+from src.plots import plot_xy, plot_altitude
+from datetime import datetime, timedelta, timezone
 
 import numpy as np
-from sgp4.api import Satrec, jday
+from sgp4.api import Satrec
 
 from src.tle_loader import load_tles
+from src.utils import datetime_to_julian
 
 
-def propagate_once():
+def propagate_satellite(
+    satellite,
+    duration_minutes=90,
+    step_minutes=1
+):
     """
-    Load the first satellite from the TLE file and propagate
-    its orbit to the current UTC time.
+    Propagate one satellite over a period of time.
+
+    Returns a dictionary containing all orbit data.
     """
 
-    # Load satellites
+    satrec = Satrec.twoline2rv(
+        satellite["line1"],
+        satellite["line2"]
+    )
+
+    start_time = datetime.now(timezone.utc)
+
+    times = []
+    positions = []
+    velocities = []
+    altitudes = []
+
+    earth_radius = 6378.137
+
+    steps = duration_minutes // step_minutes + 1
+
+    for step in range(steps):
+
+        current_time = start_time + timedelta(
+            minutes=step * step_minutes
+        )
+
+        jd, fr = datetime_to_julian(current_time)
+
+        error, position, velocity = satrec.sgp4(jd, fr)
+
+        if error != 0:
+            continue
+
+        position = np.array(position)
+        velocity = np.array(velocity)
+
+        radius = np.linalg.norm(position)
+        altitude = radius - earth_radius
+
+        times.append(current_time)
+        positions.append(position)
+        velocities.append(velocity)
+        altitudes.append(altitude)
+
+    return {
+        "name": satellite["name"],
+        "times": times,
+        "positions": np.array(positions),
+        "velocities": np.array(velocities),
+        "altitudes": np.array(altitudes),
+    }
+
+
+def main():
+
     satellites = load_tles("data/sample_tles.txt")
 
-    if not satellites:
-        raise ValueError("No satellites found in the TLE file.")
+    satellite = satellites[0]
 
-    # Select the first satellite
-    sat = satellites[0]
+    result = propagate_satellite(satellite)
 
-    # Build the SGP4 satellite object
-    satrec = Satrec.twoline2rv(
-        sat["line1"],
-        sat["line2"]
-    )
+    print(f"\nSatellite: {result['name']}")
+    print(f"Generated {len(result['times'])} orbit points.")
+    print(f"Average altitude: {result['altitudes'].mean():.2f} km")
 
-    # Current UTC time
-    now = datetime.now(timezone.utc)
+    plot_xy(result)
+    plot_altitude(result)
 
-    jd, fr = jday(
-        now.year,
-        now.month,
-        now.day,
-        now.hour,
-        now.minute,
-        now.second + now.microsecond / 1_000_000
-    )
-
-    # Propagate orbit
-    error_code, position, velocity = satrec.sgp4(jd, fr)
-
-    if error_code != 0:
-        raise RuntimeError(f"SGP4 returned error code {error_code}")
-
-    position = np.array(position)
-    velocity = np.array(velocity)
-
-    print(f"Satellite: {sat['name']}")
-    print(f"UTC Time: {now.isoformat()}")
-    print(f"Position (km): {position}")
-    print(f"Velocity (km/s): {velocity}")
+    print("\nOrbit plots created successfully.")
 
 
 if __name__ == "__main__":
-    propagate_once()
+    main()
