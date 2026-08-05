@@ -7,30 +7,51 @@ from src.tle_loader import load_tles
 
 
 def propagate_once():
-    # Load one satellite from your TLE file
-    sats = load_tles("data/sample_tles.txt")
-    sat = sats[0]
+    """
+    Load the first satellite from the TLE file and propagate
+    its orbit to the current UTC time.
+    """
 
-    # Build SGP4 satellite object
-    satrec = Satrec.twoline2rv(sat.line1, sat.line2)
+    # Load satellites
+    satellites = load_tles("data/sample_tles.txt")
 
-    # Use "now" in UTC
+    if not satellites:
+        raise ValueError("No satellites found in the TLE file.")
+
+    # Select the first satellite
+    sat = satellites[0]
+
+    # Build the SGP4 satellite object
+    satrec = Satrec.twoline2rv(
+        sat["line1"],
+        sat["line2"]
+    )
+
+    # Current UTC time
     now = datetime.now(timezone.utc)
-    jd, fr = jday(now.year, now.month, now.day, now.hour, now.minute, now.second)
 
-    # Propagate
-    e, r, v = satrec.sgp4(jd, fr)  # r in km, v in km/s
+    jd, fr = jday(
+        now.year,
+        now.month,
+        now.day,
+        now.hour,
+        now.minute,
+        now.second + now.microsecond / 1_000_000
+    )
 
-    if e != 0:
-        raise RuntimeError(f"SGP4 error code: {e}")
+    # Propagate orbit
+    error_code, position, velocity = satrec.sgp4(jd, fr)
 
-    r = np.array(r)
-    v = np.array(v)
+    if error_code != 0:
+        raise RuntimeError(f"SGP4 returned error code {error_code}")
 
-    print(f"Satellite: {sat.name}")
-    print(f"UTC time:  {now.isoformat()}")
-    print(f"Position (km): {r}")
-    print(f"Velocity (km/s): {v}")
+    position = np.array(position)
+    velocity = np.array(velocity)
+
+    print(f"Satellite: {sat['name']}")
+    print(f"UTC Time: {now.isoformat()}")
+    print(f"Position (km): {position}")
+    print(f"Velocity (km/s): {velocity}")
 
 
 if __name__ == "__main__":
