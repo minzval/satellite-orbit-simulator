@@ -1,27 +1,16 @@
 import numpy as np
 
 
-def distance_between(position1, position2):
+def calculate_distance(position1, position2):
     """
-    Calculate the Euclidean distance between two satellites.
-
-    Parameters
-    ----------
-    position1 : ndarray
-    position2 : ndarray
-
-    Returns
-    -------
-    float
-        Distance in kilometres.
+    Calculate the Euclidean distance between two position vectors.
     """
-
     return np.linalg.norm(position1 - position2)
 
 
-def closest_approach(result1, result2):
+def find_closest_approach(result1, result2):
     """
-    Determine the closest approach between two propagated satellites.
+    Find the closest approach between two propagated satellites.
 
     Parameters
     ----------
@@ -37,11 +26,13 @@ def closest_approach(result1, result2):
     positions2 = result2["positions"]
 
     minimum_distance = float("inf")
-    minimum_index = -1
+    minimum_index = 0
 
-    for i in range(min(len(positions1), len(positions2))):
+    total_steps = min(len(positions1), len(positions2))
 
-        distance = distance_between(
+    for i in range(total_steps):
+
+        distance = calculate_distance(
             positions1[i],
             positions2[i]
         )
@@ -53,13 +44,12 @@ def closest_approach(result1, result2):
     return {
 
         "satellite_1": result1["name"],
-
         "satellite_2": result2["name"],
 
         "minimum_distance": minimum_distance,
 
-        "time":
+        "time": result1["times"][minimum_index],
 
-            result1["times"][minimum_index]
+        "index": minimum_index
 
     }
