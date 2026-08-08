@@ -1,58 +1,65 @@
 # Satellite Orbit Simulator
 
-A Python-based satellite orbit analysis tool that uses Two-Line Element (TLE) data and the SGP4 propagation model to simulate satellite orbits, visualize trajectories, and analyze closest approaches between satellites.
+A Python-based satellite orbit analysis tool that uses Two-Line Element (TLE) data and the SGP4 propagation model to simulate satellite motion, visualize orbits, and identify the closest approaches between multiple satellites.
 
 ## Project Overview
 
-This project was developed to explore practical applications of orbital mechanics and scientific programming using Python.
+The project was developed to explore practical applications of orbital mechanics, satellite tracking, and scientific programming.
 
-The simulator takes satellite TLE data as input and uses the SGP4 model to calculate satellite positions and velocities over a selected period of time.
+The program takes satellite TLE data as input and:
 
-The resulting data is used to:
+- Loads and validates satellite TLE data
+- Propagates satellite positions using the SGP4 model
+- Generates time-series orbital data
+- Calculates satellite altitude
+- Produces orbit visualizations
+- Compares multiple satellites
+- Identifies their closest approaches
+- Records the time of closest approach
+- Applies a simple distance-based risk classification
+- Exports closest-approach results to CSV
+- Includes automated tests for core functionality
 
-- Propagate satellite orbits
-- Calculate satellite altitude
-- Visualize orbital trajectories
-- Compare multiple satellites
-- Determine closest approaches
-- Plot separation distance over time
-- Apply a simple distance-based screening threshold
-- Export analysis results to CSV
+## Technologies
 
----
+- Python 3.10
+- NumPy
+- Matplotlib
+- Pandas
+- SGP4
+- Pytest
+- Git / GitHub
 
-## Features
-
-### TLE Data Handling
-
-The program reads satellite information from a TLE file containing:
-
-- Satellite name
-- TLE line 1
-- TLE line 2
-
-Example satellites currently included in the sample dataset:
-
-- ISS (ZARYA)
-- HUBBLE SPACE TELESCOPE
-- NOAA 15
-
-### SGP4 Orbit Propagation
-
-Satellite positions are calculated using the SGP4 propagation model through the Python `sgp4` library.
-
-The simulator generates:
-
-- Position vectors in kilometres
-- Velocity vectors in kilometres per second
-- Time-series position data
-- Satellite altitude
-
-### Orbit Visualization
-
-The project generates an XY projection of the satellite orbit and an altitude-versus-time graph.
-
-Generated figures are stored in:
+## Project Structure
 
 ```text
-figures/
+satellites-orbit-simulator/
+│
+├── data/
+│   └── sample_tles.txt
+│
+├── figures/
+│   ├── orbit_xy.png
+│   └── altitude_vs_time.png
+│
+├── src/
+│   ├── __init__.py
+│   ├── tle_loader.py
+│   ├── utils.py
+│   ├── propagate.py
+│   ├── plots.py
+│   ├── closest_approach.py
+│   ├── comparison.py
+│   ├── export.py
+│   └── main.py
+│
+├── tests/
+│   ├── test_closest_approach.py
+│   ├── test_tle_loader.py
+│   └── test_propagation.py
+│
+├── closest_approaches.csv
+├── requirements.txt
+├── README.md
+├── LICENSE
+└── .gitignore
